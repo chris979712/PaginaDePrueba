@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Gato</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            overflow: hidden;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            margin: 20px auto;
+            width: 310px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #000;
+            color: #00ff00;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid #00ff00;
+        }
+        .button-container {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #00ff00;
+            border: none;
+            color: #1e1e1e;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:disabled {
+            background-color: #333;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Juego de Gato</h1>
+        <div class="button-container">
+            <button id="playWithBotBtn">Jugar contra el Bot</button>
+            <button id="playWithFriendBtn">Jugar contra un Amigo</button>
+        </div>
+        <div class="board" id="board"></div>
+    </div>
+
+    <script>
+        const board = document.getElementById("board");
+        const playWithBotBtn = document.getElementById("playWithBotBtn");
+        const playWithFriendBtn = document.getElementById("playWithFriendBtn");
+
+        let cells = Array(9).fill(null);
+        let currentPlayer = "X";
+        let isPlayingWithBot = true; // Inicialmente juega contra el bot
+
+        // Habilitar/deshabilitar botones según el modo de juego
+        function toggleGameMode() {
+            if (isPlayingWithBot) {
+                playWithBotBtn.disabled = true;
+                playWithFriendBtn.disabled = false;
+            } else {
+                playWithBotBtn.disabled = false;
+                playWithFriendBtn.disabled = true;
+            }
+        }
+
+        // Función para cambiar el modo de juego
+        playWithBotBtn.addEventListener("click", () => {
+            isPlayingWithBot = true;
+            resetGame();
+            toggleGameMode();
+        });
+
+        playWithFriendBtn.addEventListener("click", () => {
+            isPlayingWithBot = false;
+            resetGame();
+            toggleGameMode();
+        });
+
+        // Verifica el ganador
+        function checkWinner() {
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            for (let comb of winningCombinations) {
+                if (cells[comb[0]] && cells[comb[0]] === cells[comb[1]] && cells[comb[1]] === cells[comb[2]]) {
+                    return cells[comb[0]];
+                }
+            }
+            return cells.includes(null) ? null : "Empate";
+        }
+
+        // Maneja el click de una celda
+        function handleClick(index) {
+            if (!cells[index] && (currentPlayer === "X" || !isPlayingWithBot)) {
+                cells[index] = currentPlayer;
+                renderBoard();
+                let winner = checkWinner();
+                if (winner) {
+                    setTimeout(() => alert(winner === "Empate" ? "¡Es un empate!" : `¡${winner} gana!`), 100);
+                    resetGame();
+                    return;
+                }
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                if (isPlayingWithBot && currentPlayer === "O") {
+                    setTimeout(botMove, 500);
+                }
+            }
+        }
+
+        // Movimiento del bot
+        function botMove() {
+            let bestMove = minimax(cells, "O");
+            cells[bestMove.index] = "O";
+            renderBoard();
+            let winner = checkWinner();
+            if (winner) {
+                setTimeout(() => alert(winner === "Empate" ? "¡Es un empate!" : `¡${winner} gana!`), 100);
+                resetGame();
+                return;
+            }
+            currentPlayer = "X";
+        }
+
+        // Minimax para elegir el mejor movimiento del bot
+        function minimax(board, player) {
+            const opponent = player === "O" ? "X" : "O";
+            const availableMoves = board.map((value, index) => value === null ? index : null).filter(v => v !== null);
+
+            if (checkWinner(board) === "O") return { score: 1 };
+            if (checkWinner(board) === "X") return { score: -1 };
+            if (availableMoves.length === 0) return { score: 0 };
+
+            let bestMove = null;
+            let bestScore = (player === "O" ? -Infinity : Infinity);
+
+            for (let move of availableMoves) {
+                board[move] = player;
+                let score = minimaxScore(board, opponent);
+                board[move] = null;
+
+                if ((player === "O" && score > bestScore) || (player === "X" && score < bestScore)) {
+                    bestScore = score;
+                    bestMove = { index: move };
+                }
+            }
+            return bestMove;
+        }
+
+        function minimaxScore(board, player) {
+            let winner = checkWinner(board);
+            if (winner === "O") return 1;
+            if (winner === "X") return -1;
+            if (winner === "Empate") return 0;
+
+            const opponent = player === "O" ? "X" : "O";
+            const availableMoves = board.map((value, index) => value === null ? index : null).filter(v => v !== null);
+
+            let bestScore = (player === "O" ? -Infinity : Infinity);
+            for (let move of availableMoves) {
+                board[move] = player;
+                let score = minimaxScore(board, opponent);
+                board[move] = null;
+
+                bestScore = (player === "O") ? Math.max(score, bestScore) : Math.min(score, bestScore);
+            }
+            return bestScore;
+        }
+
+        // Reiniciar el juego
+        function resetGame() {
+            cells = Array(9).fill(null);
+            currentPlayer = "X";
+            setTimeout(renderBoard, 200);
+        }
+
+        // Renderizar el tablero
+        function renderBoard() {
+            board.innerHTML = "";
+            cells.forEach((value, index) => {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.textContent = value || "";
+                cell.addEventListener("click", () => handleClick(index));
+                board.appendChild(cell);
+            });
+        }
+
+        // Inicializar
+        toggleGameMode();
+        renderBoard();
+    </script>
+</body>
+</html>
