@@ -7,7 +7,7 @@
     <style>
         body {
             background-color: #1e1e1e;
-            color: #00ff00;
+            color: #0000ff; /* azul Spider-Man */
             font-family: 'Courier New', monospace;
             text-align: center;
             overflow: hidden;
@@ -16,7 +16,7 @@
             background-color: #2d2d2d;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 10px rgba(0, 0, 255, 0.5); /* sombra azul */
             display: inline-block;
             position: relative;
             z-index: 2;
@@ -34,23 +34,23 @@
         .cell {
             width: 100px;
             height: 100px;
-            background-color: #000;
-            color: #00ff00;
+            background-color: #2d2d2d; /* rojo Spider-Man */
+            color: #ffffff; /* azul para X y O */
             font-size: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            border: 2px solid #00ff00;
+            border: 2px solid #ff0000; /* borde azul */
         }
         .button-container {
             margin: 20px 0;
         }
         button {
             padding: 10px 20px;
-            background-color: #00ff00;
+            background-color: #0000ff; /* azul fondo */
             border: none;
-            color: #1e1e1e;
+            color: #ffffff; /* texto blanco */
             font-size: 16px;
             cursor: pointer;
             margin: 5px;
@@ -60,6 +60,7 @@
             cursor: not-allowed;
         }
     </style>
+    
 </head>
 <body>
     <div class="container">
@@ -70,7 +71,7 @@
         </div>
         <div class="board" id="board"></div>
     </div>
-
+    <img id="spiderman-swing" src="spiderman.gif" style="display:none; position: fixed; top: -200px; left: 50%; transform: translateX(-50%); z-index: 999; width: 200px;" />
     <script>
         const board = document.getElementById("board");
         const playWithBotBtn = document.getElementById("playWithBotBtn");
@@ -220,38 +221,48 @@
         function launchConfetti() {
             const duration = 3 * 1000;
             const end = Date.now() + duration;
+            const spiderman = document.getElementById("spiderman-swing");
+            spiderman.style.display = "block";
+            spiderman.style.top = "50px";
             (function frame() {
                 confetti({
                     particleCount: 25,
                     angle: 60,
                     spread: 75,
                     origin: { x: 0 },
-                    colors: ['#00ff00', '#ffffff']
+                    colors: ['#0000ff', '#ff0000']
                 });
                 confetti({
                     particleCount: 25,
                     angle: 120,
                     spread: 75,
                     origin: { x: 1 },
-                    colors: ['#00ff00', '#ffffff']
+                    colors: ['#0000ff', '#ff0000']
                 });
                 confetti({
                     particleCount: 20,
                     angle: 90,
                     spread: 90,
                     origin: { x: 0.5, y: 0 },
-                    colors: ['#00ff00', '#ffffff']
+                    colors: ['#0000ff', '#ff0000']
                 });
 
                 if (Date.now() < end) {
                     setTimeout(frame, 100); // más frecuente
                 }
             })();
+            setTimeout(() => {
+                spiderman.style.top = "-200px"; 
+                setTimeout(() => {
+                    spiderman.style.display = "none"; 
+                }, 3000); 
+            }, 5000);
         }
         const drawSound = new Audio("hevuelto.mp3");
         const winSound = new Audio("tuturututuru.mp3");
         const spidermantwip = new Audio("spidermantwip.wav");
         const puedesalir = new Audio("puedesalir.mp3")
+        
         toggleGameMode();
         renderBoard();
     </script>
