@@ -78,9 +78,7 @@
 
         let cells = Array(9).fill(null);
         let currentPlayer = "X";
-        let isPlayingWithBot = true; // Inicialmente juega contra el bot
-
-        // Habilitar/deshabilitar botones según el modo de juego
+        let isPlayingWithBot = true; 
         function toggleGameMode() {
             if (isPlayingWithBot) {
                 playWithBotBtn.disabled = true;
@@ -90,21 +88,17 @@
                 playWithFriendBtn.disabled = true;
             }
         }
-
-        // Función para cambiar el modo de juego
         playWithBotBtn.addEventListener("click", () => {
+            puedesalir.play();
             isPlayingWithBot = true;
             resetGame();
             toggleGameMode();
         });
-
         playWithFriendBtn.addEventListener("click", () => {
             isPlayingWithBot = false;
             resetGame();
             toggleGameMode();
         });
-
-        // Verifica el ganador
         function checkWinner() {
             const winningCombinations = [
                 [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -118,40 +112,53 @@
             }
             return cells.includes(null) ? null : "Empate";
         }
-
-        // Maneja el click de una celda
         function handleClick(index) {
             if (!cells[index] && (currentPlayer === "X" || !isPlayingWithBot)) {
                 cells[index] = currentPlayer;
                 renderBoard();
                 let winner = checkWinner();
                 if (winner) {
-                    setTimeout(() => alert(winner === "Empate" ? "¡Es un empate!" : `¡${winner} gana!`), 100);
-                    resetGame();
+                    setTimeout(() => {
+                        if (winner === "Empate") {
+                            drawSound.play();
+                            alert("¡Es un empate!");
+                        } else {
+                            winSound.play();
+                            launchConfetti();
+                            alert(`¡NO! ¿Quién ganó? Fue: ${winner}`);
+                        }
+                        resetGame();
+                    }, 100);
                     return;
                 }
+                spidermantwip.play();
                 currentPlayer = currentPlayer === "X" ? "O" : "X";
                 if (isPlayingWithBot && currentPlayer === "O") {
                     setTimeout(botMove, 500);
                 }
             }
         }
-
-        // Movimiento del bot
         function botMove() {
             let bestMove = minimax(cells, "O");
             cells[bestMove.index] = "O";
             renderBoard();
             let winner = checkWinner();
             if (winner) {
-                setTimeout(() => alert(winner === "Empate" ? "¡Es un empate!" : `¡${winner} gana!`), 100);
-                resetGame();
+                setTimeout(() => {
+                        if (winner === "Empate") {
+                            drawSound.play();
+                            alert("¡Es un empate!");
+                        } else {
+                            winSound.play();
+                            launchConfetti();
+                            alert(`¡NO! ¿Quién ganó? Fue: ${winner}`);
+                        }
+                        resetGame();
+                }, 100);
                 return;
             }
             currentPlayer = "X";
         }
-
-        // Minimax para elegir el mejor movimiento del bot
         function minimax(board, player) {
             const opponent = player === "O" ? "X" : "O";
             const availableMoves = board.map((value, index) => value === null ? index : null).filter(v => v !== null);
@@ -195,15 +202,11 @@
             }
             return bestScore;
         }
-
-        // Reiniciar el juego
         function resetGame() {
             cells = Array(9).fill(null);
             currentPlayer = "X";
             setTimeout(renderBoard, 200);
         }
-
-        // Renderizar el tablero
         function renderBoard() {
             board.innerHTML = "";
             cells.forEach((value, index) => {
@@ -214,10 +217,44 @@
                 board.appendChild(cell);
             });
         }
+        function launchConfetti() {
+            const duration = 3 * 1000;
+            const end = Date.now() + duration;
+            (function frame() {
+                confetti({
+                    particleCount: 25,
+                    angle: 60,
+                    spread: 75,
+                    origin: { x: 0 },
+                    colors: ['#00ff00', '#ffffff']
+                });
+                confetti({
+                    particleCount: 25,
+                    angle: 120,
+                    spread: 75,
+                    origin: { x: 1 },
+                    colors: ['#00ff00', '#ffffff']
+                });
+                confetti({
+                    particleCount: 20,
+                    angle: 90,
+                    spread: 90,
+                    origin: { x: 0.5, y: 0 },
+                    colors: ['#00ff00', '#ffffff']
+                });
 
-        // Inicializar
+                if (Date.now() < end) {
+                    setTimeout(frame, 100); // más frecuente
+                }
+            })();
+        }
+        const drawSound = new Audio("hevuelto.mp3");
+        const winSound = new Audio("tuturututuru.mp3");
+        const spidermantwip = new Audio("spidermantwip.wav");
+        const puedesalir = new Audio("puedesalir.mp3")
         toggleGameMode();
         renderBoard();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </body>
 </html>
